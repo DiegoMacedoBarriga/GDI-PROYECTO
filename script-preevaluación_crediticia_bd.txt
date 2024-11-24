@@ -1,220 +1,328 @@
--- Creación de la base de datos
-CREATE DATABASE preevaluación_crediticia_bd;
-
--- Selección de la base de datos
-\c preevaluación_crediticia_bd;
 
 -- Creación de las tablas
-CREATE TABLE concesionario (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(25) NOT NULL,
-    teléfono CHAR(9) NOT NULL,
-    correo VARCHAR(40) NOT NULL,
-    ruc CHAR(11) NOT NULL UNIQUE
+create table concesionario (
+    id serial primary key,
+    nombre varchar(25) not null,
+    teléfono char(9) not null,
+    correo varchar(40) not null,
+    ruc char(11) not null unique
 );
 
-CREATE TABLE clientes (
-    id SERIAL PRIMARY KEY,
-    dni INT NOT NULL UNIQUE,
-    nombre VARCHAR(30) NOT NULL,
-    teléfono CHAR(9) NOT NULL,
-    correo VARCHAR(40) NOT NULL,
-    apellido_paterno VARCHAR(20) NOT NULL,
-    apellido_materno VARCHAR(20) NOT NULL
+create table clientes (
+    id serial primary key,
+    dni int not null unique,
+    nombre varchar(30) not null,
+    teléfono char(9) not null,
+    correo varchar(40) not null,
+    apellido_paterno varchar(20) not null,
+    apellido_materno varchar(20) not null
 );
 
-CREATE TABLE gestor_comercial (
-    id SERIAL PRIMARY KEY,
-    dni INT NOT NULL UNIQUE,
-    nombres VARCHAR(30) NOT NULL,
-    teléfono CHAR(9) NOT NULL,
-    correo VARCHAR(40) NOT NULL,
-    apellido_paterno VARCHAR(20) NOT NULL,
-    apellido_materno VARCHAR(20) NOT NULL,
-    fecha_de_contratación DATE NOT NULL,
-    id_concesionario INT NOT NULL REFERENCES concesionario(id)
+create table gestor_comercial (
+    id serial primary key,
+    dni int not null unique,
+    nombres varchar(30) not null,
+    teléfono char(9) not null,
+    correo varchar(40) not null,
+    apellido_paterno varchar(20) not null,
+    apellido_materno varchar(20) not null,
+    fecha_de_contratación date not null,
+    id_concesionario int not null references concesionario(id)
 );
 
-CREATE TABLE área_de_riesgos (
-    id SERIAL PRIMARY KEY,
-    teléfono INT NOT NULL,
-    correo VARCHAR(40) NOT NULL
+create table área_de_riesgos (
+    id serial primary key,
+    teléfono int not null,
+    correo varchar(40) not null
 );
 
-CREATE TABLE historial_crediticio (
-    id SERIAL PRIMARY KEY,
-    calificación INT NOT NULL,
-    id_área_de_riesgos INT NOT NULL REFERENCES área_de_riesgos(id),
-    id_clientes INT NOT NULL REFERENCES clientes(id)
+create table historial_crediticio (
+    id serial primary key,
+    calificación int not null,
+    id_área_de_riesgos int not null references área_de_riesgos(id),
+    id_clientes int not null references clientes(id)
 );
 
-CREATE TABLE vehículo (
-    número_de_serie CHAR(8) PRIMARY KEY,
-    asientos INT NOT NULL,
-    motor VARCHAR(40) NOT NULL,
-    color VARCHAR(20) NOT NULL,
-    carrocería VARCHAR(30) NOT NULL,
-    combustible VARCHAR(20) NOT NULL,
-    marca VARCHAR(40) NOT NULL,
-    modelo VARCHAR(40) NOT NULL,
-    año_modelo INT NOT NULL,
-    chasis VARCHAR(17) NOT NULL,
-    id_concesionario INT REFERENCES concesionario(id),
-    precio DECIMAL(12, 2) NOT NULL
+create table vehículo (
+    número_de_serie char(8) primary key,
+    asientos int not null,
+    motor varchar(40) not null,
+    color varchar(20) not null,
+    carrocería varchar(30) not null,
+    combustible varchar(20) not null,
+    marca varchar(40) not null,
+    modelo varchar(40) not null,
+    año_modelo int not null,
+    chasis varchar(17) not null,
+    id_concesionario int references concesionario(id),
+    precio decimal(12, 2) not null
 );
 
-CREATE TABLE carta_características (
-    id SERIAL PRIMARY KEY,
-    id_clientes INT NOT NULL REFERENCES clientes(id),
-    id_concesionario INT NOT NULL REFERENCES concesionario(id),
-    número_de_serie_del_vehículo CHAR(8) NOT NULL REFERENCES vehículo(número_de_serie),
-    día CHAR(2) NOT NULL,
-    mes CHAR(2) NOT NULL,
-    año CHAR(4) NOT NULL
+create table carta_características (
+    id serial primary key,
+    id_clientes int not null references clientes(id),
+    id_concesionario int not null references concesionario(id),
+    número_de_serie_del_vehículo char(8) not null references vehículo(número_de_serie),
+    día char(2) not null,
+    mes char(2) not null,
+    año char(4) not null
 );
 
-CREATE TABLE ubicación (
-    distrito VARCHAR(20) NOT NULL,
-    calle VARCHAR(20) NOT NULL,
-    id_concesionario INT NOT NULL REFERENCES concesionario(id),
-    ciudad VARCHAR(20) NOT NULL
+create table ubicación (
+    distrito varchar(20) not null,
+    calle varchar(20) not null,
+    id_concesionario int not null references concesionario(id),
+    ciudad varchar(20) not null
 );
 
-CREATE TABLE contrato_crediticio (
-    id SERIAL PRIMARY KEY,
-    año CHAR(4) NOT NULL,
-    mes CHAR(2) NOT NULL,
-    día CHAR(2) NOT NULL,
-    id_carta_caracteristicas INT NOT NULL REFERENCES carta_características(id),
-    id_gestor_comercial INT NOT NULL REFERENCES gestor_comercial(id),
-    cuota_inicial DECIMAL(10, 2) NOT NULL,
-    monto_a_desembolsar DECIMAL(15, 2) NOT NULL,
-    id_clientes INT NOT NULL REFERENCES clientes(id)
+create table contrato_crediticio (
+    id serial primary key,
+    año char(4) not null,
+    mes char(2) not null,
+    día char(2) not null,
+    id_carta_caracteristicas int not null references carta_características(id),
+    id_gestor_comercial int not null references gestor_comercial(id),
+    cuota_inicial decimal(10, 2) not null,
+    monto_a_desembolsar decimal(15, 2) not null,
+    id_clientes int not null references clientes(id)
 );
 
 -- Creación de índices
--- Índice para optimizar la búsqueda del puntaje crediticio de un cliente
-CREATE INDEX idx_historial_puntaje_cliente ON historial_crediticio (id_clientes, calificación);
+CREATE INDEX idx_contrato_fecha_cliente
+ON contrato_crediticio (año, mes, día, id_clientes);
 
--- Índice para optimizar la búsqueda de vehículos por marca y modelo
-CREATE INDEX idx_vehiculo_marca_modelo ON vehículo (marca, modelo);
+CREATE INDEX idx_vehiculo_marca_modelo
+ON vehículo (marca, modelo);
 
--- Índice para optimizar las búsquedas por fecha en la tabla contrato_crediticio
-CREATE INDEX idx_contrato_fecha ON contrato_crediticio (año, mes, día);
+CREATE INDEX idx_historial_puntaje_cliente
+ON historial_crediticio (id_clientes, calificación);
 
 -- Inserción de datos en la tabla concesionario
-INSERT INTO concesionario (nombre, teléfono, correo, ruc) VALUES
+insert into concesionario (nombre, teléfono, correo, ruc) values
 ('autos del norte', '987654321', 'contacto@autosnorte.com', '20123456789'),
 ('carros lima', '912345678', 'ventas@carroslima.com', '20234567891'),
 ('vehículos del sur', '934567890', 'info@vehiculossur.com', '20345678912'),
-('autoeste', '932145678', 'contacto@autoeste.com', '20456789012'),
-('motores centro', '978564321', 'info@motorescentro.com', '20567890123'),
-('car depot', '965432187', 'ventas@cardepot.com', '20678901234'),
-('luxury rides', '956781234', 'soporte@luxuryrides.com', '20789012345'),
-('eco motors', '934561287', 'info@ecomotors.com', '20890123456'),
-('car world', '947823561', 'ventas@carworld.com', '20901234567'),
-('speedy autos', '978213546', 'soporte@speedyautos.com', '21012345678');
+('car center', '913245678', 'ventas@carcenter.com', '20456789123'),
+('autos baratos', '914678345', 'info@autosbaratos.com', '20567891234'),
+('mega autos', '912478356', 'ventas@megaautos.com', '20678912345'),
+('lima motors', '917856432', 'contacto@limamotors.com', '20789123456'),
+('surco autos', '918675342', 'ventas@surcoautos.com', '20891234567'),
+('arequipa cars', '914326578', 'contacto@arequipacars.com', '20912345678'),
+('cusco cars', '913457826', 'info@cuscocars.com', '21023456789');
 
 -- Inserción de datos en la tabla clientes
-INSERT INTO clientes (dni, nombre, teléfono, correo, apellido_paterno, apellido_materno) VALUES
+insert into clientes (dni, nombre, teléfono, correo, apellido_paterno, apellido_materno) values
 (70345678, 'luis', '913456789', 'luis.perez@gmail.com', 'perez', 'gomez'),
 (70234567, 'ana', '945678321', 'ana.lopez@yahoo.com', 'lopez', 'torres'),
 (70123456, 'carlos', '956789012', 'carlos.martinez@outlook.com', 'martinez', 'diaz'),
 (70456789, 'marta', '934567123', 'marta.rodriguez@hotmail.com', 'rodriguez', 'cruz'),
 (70567890, 'josé', '987654321', 'jose.hernandez@gmail.com', 'hernandez', 'vargas'),
-(70111222, 'sofia', '912345678', 'sofia.gomez@gmail.com', 'gomez', 'luna'),
-(70122333, 'miguel', '923456789', 'miguel.lopez@yahoo.com', 'lopez', 'castro'),
-(70133444, 'claudia', '934567890', 'claudia.rojas@outlook.com', 'rojas', 'quintana'),
-(70144555, 'javier', '945678901', 'javier.crespo@hotmail.com', 'crespo', 'herrera'),
-(70155666, 'maria', '956789012', 'maria.rivera@gmail.com', 'rivera', 'sanchez');
+(70678901, 'maria', '946738291', 'maria.gomez@yahoo.com', 'gomez', 'ramirez'),
+(70789012, 'juan', '935847123', 'juan.torres@gmail.com', 'torres', 'perez'),
+(70890123, 'rosa', '947182347', 'rosa.martinez@hotmail.com', 'martinez', 'vargas'),
+(70901234, 'daniel', '948231456', 'daniel.soto@gmail.com', 'soto', 'mendoza'),
+(71012345, 'paula', '957341287', 'paula.fernandez@yahoo.com', 'fernandez', 'ramirez');
 
 -- Inserción de datos en la tabla gestor_comercial
-INSERT INTO gestor_comercial (dni, nombres, teléfono, correo, apellido_paterno, apellido_materno, fecha_de_contratación, id_concesionario) VALUES
+insert into gestor_comercial (dni, nombres, teléfono, correo, apellido_paterno, apellido_materno, fecha_de_contratación, id_concesionario) values
 (65890432, 'maria', '912345678', 'maria.gestor@autosnorte.com', 'castillo', 'soto', '2021-04-15', 1),
 (65781234, 'juan', '923456789', 'juan.gestor@carroslima.com', 'fernandez', 'mendoza', '2020-11-20', 2),
 (65456789, 'elena', '934567890', 'elena.gestor@vehiculossur.com', 'ramirez', 'paz', '2019-09-10', 3),
-(65112233, 'carla', '912345678', 'carla.gestor@autoeste.com', 'villalobos', 'vega', '2022-01-15', 4),
-(65123344, 'jorge', '923456789', 'jorge.gestor@motorescentro.com', 'diaz', 'alvarez', '2021-02-20', 5),
-(65134455, 'sandra', '934567890', 'sandra.gestor@cardepot.com', 'gutierrez', 'cruz', '2020-03-25', 6),
-(65145566, 'fernando', '945678901', 'fernando.gestor@luxuryrides.com', 'lopez', 'fernandez', '2019-04-10', 7),
-(65156677, 'monica', '956789012', 'monica.gestor@ecomotors.com', 'rodriguez', 'mendoza', '2018-05-12', 8),
-(65167788, 'pablo', '967890123', 'pablo.gestor@carworld.com', 'castro', 'salas', '2017-06-15', 9),
-(65178899, 'andrea', '978901234', 'andrea.gestor@speedyautos.com', 'valencia', 'molina', '2016-07-20', 10);
+(65432178, 'lucas', '945678123', 'lucas.gestor@carcenter.com', 'diaz', 'lopez', '2022-03-15', 4),
+(65321987, 'sofia', '956781234', 'sofia.gestor@autosbaratos.com', 'gomez', 'torres', '2021-10-25', 5),
+(65231876, 'pedro', '967891234', 'pedro.gestor@megaautos.com', 'martinez', 'cruz', '2020-12-01', 6),
+(65148765, 'camila', '978912345', 'camila.gestor@limamotors.com', 'hernandez', 'soto', '2021-07-19', 7),
+(65037654, 'diego', '989123456', 'diego.gestor@surcoautos.com', 'perez', 'fernandez', '2020-05-22', 8),
+(65928574, 'laura', '990234567', 'laura.gestor@arequipacars.com', 'vargas', 'gomez', '2022-01-13', 9),
+(65819284, 'roberto', '991345678', 'roberto.gestor@cuscocars.com', 'torres', 'ramirez', '2023-02-14', 10);
 
 -- Inserción de datos en la tabla área_de_riesgos
-INSERT INTO área_de_riesgos (teléfono, correo) VALUES
-(987654321, 'analisis1@riesgos.com'),
-(976543210, 'analisis2@riesgos.com'),
-(965432109, 'analisis3@riesgos.com'),
-(954321098, 'analisis4@riesgos.com'),
-(943210987, 'analisis5@riesgos.com'),
-(932109876, 'analisis6@riesgos.com'),
-(921098765, 'analisis7@riesgos.com'),
-(910987654, 'analisis8@riesgos.com'),
-(909876543, 'analisis9@riesgos.com'),
-(898765432, 'analisis10@riesgos.com');
+insert into área_de_riesgos (teléfono, correo) values
+(901234567, 'riesgos@credito.com'),
+(902345678, 'riesgos2@credito.com'),
+(903456789, 'riesgos3@credito.com'),
+(904567890, 'riesgos4@credito.com'),
+(905678901, 'riesgos5@credito.com'),
+(906789012, 'riesgos6@credito.com'),
+(907890123, 'riesgos7@credito.com'),
+(908901234, 'riesgos8@credito.com'),
+(909012345, 'riesgos9@credito.com'),
+(910123456, 'riesgos10@credito.com');
 
 -- Inserción de datos en la tabla historial_crediticio
-INSERT INTO historial_crediticio (calificación, id_área_de_riesgos, id_clientes) VALUES
+insert into historial_crediticio (calificación, id_área_de_riesgos, id_clientes) values
 (580, 1, 1),
-(250, 2, 2),
-(320, 3, 3),
-(290, 4, 4),
-(610, 5, 5),
-(700, 6, 6),
-(450, 7, 7),
-(500, 8, 8),
-(600, 9, 9),
-(550, 10, 10);
+(250, 1, 2),
+(320, 1, 3),
+(290, 1, 4),
+(610, 1, 5),
+(400, 2, 6),
+(450, 3, 7),
+(480, 4, 8),
+(550, 5, 9),
+(590, 6, 10);
 
 -- Inserción de datos en la tabla vehículo
-INSERT INTO vehículo (número_de_serie, asientos, motor, color, carrocería, combustible, marca, modelo, año_modelo, chasis, id_concesionario, precio) VALUES
+insert into vehículo (número_de_serie, asientos, motor, color, carrocería, combustible, marca, modelo, año_modelo, chasis, id_concesionario, precio) values
 ('abc12345', 5, 'v6 3.5l', 'rojo', 'suv', 'gasolina', 'toyota', 'rav4', 2022, 'jtmhy7aj3m4031267', 1, 25000.00),
 ('def67890', 4, 'i4 2.0l', 'azul', 'sedán', 'gasolina', 'honda', 'civic', 2021, '1hgcv1f33ja123456', 2, 18000.00),
 ('ghi12345', 2, 'i3 1.5l', 'negro', 'coupé', 'eléctrico', 'tesla', 'model 3', 2023, '5yj3e1ea8jf123456', 3, 35000.00),
-('jkl12345', 4, 'v4 1.8l', 'gris', 'sedán', 'gasolina', 'nissan', 'sentra', 2021, '3n1ab7ap0jy123456', 4, 17000.00),
-('mno67890', 7, 'v6 3.0l', 'blanco', 'suv', 'diesel', 'ford', 'explorer', 2020, '1fm5k7bh6kga12345', 5, 30000.00),
-('pqr12345', 5, 'v8 5.0l', 'negro', 'camioneta', 'gasolina', 'chevrolet', 'silverado', 2022, '1gcpksek7df123456', 6, 40000.00),
-('stu67890', 4, 'i4 2.4l', 'rojo', 'hatchback', 'gasolina', 'mazda', '3', 2019, 'jm1bn1w34j1123456', 7, 15000.00),
-('vwx12345', 2, 'i4 turbo', 'azul', 'coupé', 'gasolina', 'bmw', 'm2', 2023, 'wbs1h9c52hv123456', 8, 50000.00),
-('yz123456', 5, 'i4 2.0l', 'plateado', 'sedán', 'gasolina', 'mercedes', 'cla', 2021, 'wddsj4eb0jn123456', 9, 28000.00),
-('abc67890', 5, 'v6 3.3l', 'verde', 'minivan', 'gasolina', 'kia', 'sedona', 2020, 'knam34c65m1234567', 10, 24000.00);
+('jkl56789', 7, 'v8 4.0l', 'blanco', 'pickup', 'diesel', 'ford', 'f150', 2020, '1ftfw1e15kfc12345', 4, 40000.00),
+('mno78901', 5, 'v6 3.5l', 'gris', 'suv', 'híbrido', 'hyundai', 'santa fe', 2021, 'kmhsd81a7mu123456', 5, 30000.00),
+('pqr90123', 4, 'i4 1.8l', 'verde', 'sedán', 'gasolina', 'kia', 'cerato', 2019, 'knadm4a31k1234567', 6, 17000.00),
+('stu34567', 5, 'i4 2.2l', 'azul', 'hatchback', 'diesel', 'peugeot', '308', 2021, 'vf34a9hp0m0123456', 7, 20000.00),
+('vwx56789', 4, 'i3 1.5l', 'amarillo', 'compacto', 'eléctrico', 'bmw', 'i3', 2022, 'wby1z8c3xm5123456', 8, 38000.00),
+('yz123456', 5, 'i4 2.0l', 'negro', 'suv', 'gasolina', 'nissan', 'x-trail', 2021, 'jn8at2mv7mw123456', 9, 26000.00),
+('opq98765', 5, 'v6 3.5l', 'rojo', 'suv', 'gasolina', 'mitsubishi', 'outlander', 2023, 'ja4as3aa0pz123456', 10, 29000.00);
 
 -- Inserción de datos en la tabla carta_características
-INSERT INTO carta_características (id_clientes, id_concesionario, número_de_serie_del_vehículo, día, mes, año) VALUES
+insert into carta_características (id_clientes, id_concesionario, número_de_serie_del_vehículo, día, mes, año) values
 (1, 1, 'abc12345', '15', '04', '2023'),
 (2, 2, 'def67890', '20', '05', '2022'),
 (3, 3, 'ghi12345', '10', '03', '2023'),
-(4, 4, 'jkl12345', '05', '02', '2023'),
-(5, 5, 'mno67890', '12', '03', '2023'),
-(6, 6, 'pqr12345', '18', '04', '2022'),
-(7, 7, 'stu67890', '20', '05', '2021'),
-(8, 8, 'vwx12345', '15', '06', '2023'),
-(9, 9, 'yz123456', '10', '07', '2020'),
-(10, 10, 'abc67890', '28', '08', '2023');
+(4, 4, 'jkl56789', '05', '07', '2021'),
+(5, 5, 'mno78901', '12', '08', '2020'),
+(6, 6, 'pqr90123', '19', '09', '2019'),
+(7, 7, 'stu34567', '25', '10', '2021'),
+(8, 8, 'vwx56789', '30', '11', '2022'),
+(9, 9, 'yz123456', '01', '12', '2021'),
+(10, 10, 'opq98765', '08', '06', '2023');
 
 -- Inserción de datos en la tabla ubicación
-INSERT INTO ubicación (distrito, calle, id_concesionario, ciudad) VALUES
+insert into ubicación (distrito, calle, id_concesionario, ciudad) values
 ('san isidro', 'av. javier prado', 1, 'lima'),
 ('miraflores', 'calle pardo', 2, 'lima'),
 ('surco', 'av. caminos del inca', 3, 'lima'),
-('la molina', 'av. la molina', 4, 'lima'),
-('san miguel', 'av. la marina', 5, 'lima'),
-('pueblo libre', 'av. bolivar', 6, 'lima'),
-('chorrillos', 'av. huaylas', 7, 'lima'),
-('villa el salvador', 'av. el sol', 8, 'lima'),
-('jesús maría', 'av. brasil', 9, 'lima'),
-('santa anita', 'carretera central', 10, 'lima');
-
+('san borja', 'av. aviación', 4, 'lima'),
+('la molina', 'calle los fresnos', 5, 'lima'),
+('san miguel', 'calle san martín', 6, 'lima'),
+('pueblo libre', 'av. brasil', 7, 'lima'),
+('magdalena', 'calle grau', 8, 'lima'),
+('barranco', 'av. pedro de osma', 9, 'lima'),
+('chorrillos', 'av. defensores del morro', 10, 'lima');
 -- Inserción de datos en la tabla contrato_crediticio
-INSERT INTO contrato_crediticio (año, mes, día, id_carta_caracteristicas, id_gestor_comercial, cuota_inicial, monto_a_desembolsar, id_clientes) VALUES
-('2023', '02', '05', 1, 2, 4500.00, 18000.00, 2),
-('2023', '03', '12', 2, 3, 3000.00, 12000.00, 3),
-('2022', '04', '18', 3, 4, 3500.00, 15000.00, 4),
-('2023', '05', '15', 4, 5, 4000.00, 19000.00, 1),
-('2023', '06', '20', 5, 6, 5000.00, 21000.00, 2),
-('2023', '07', '25', 6, 7, 5500.00, 22000.00, 3),
-('2023', '08', '10', 7, 8, 6000.00, 23000.00, 4),
-('2023', '09', '05', 8, 9, 6500.00, 24000.00, 5),
-('2023', '10', '15', 9, 10, 7000.00, 25000.00, 6),
-('2023', '11', '30', 10, 1, 7500.00, 26000.00, 7);
+insert into contrato_crediticio (año, mes, día, id_carta_caracteristicas, id_gestor_comercial, cuota_inicial, monto_a_desembolsar, id_clientes) values
+('2023', '04', '15', 1, 1, 5000.00, 20000.00, 1),
+('2022', '05', '20', 2, 2, 3000.00, 15000.00, 2),
+('2023', '03', '10', 3, 3, 7000.00, 25000.00, 3),
+('2023', '06', '12', 4, 4, 4000.00, 23000.00, 4),
+('2022', '07', '22', 5, 5, 3500.00, 16000.00, 5),
+('2023', '08', '05', 6, 6, 6000.00, 22000.00, 6),
+('2023', '01', '15', 7, 7, 5500.00, 18000.00, 7),
+('2023', '02', '25', 8, 8, 7000.00, 25000.00, 8),
+('2023', '03', '30', 9, 9, 4800.00, 24000.00, 9),
+('2023', '04', '08', 10, 10, 5000.00, 20000.00, 10);
+
+-- Procedimientos almacenados y triggers
+CREATE OR REPLACE FUNCTION assign_random_credit_score()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO historial_crediticio (calificación, id_área_de_riesgos, id_clientes)
+    VALUES (
+        FLOOR(RANDOM() * (600 - 180 + 1) + 180)::INT,
+        1,
+        NEW.id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION validate_client_eligibility()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM historial_crediticio
+        WHERE id_clientes = NEW.id_clientes AND calificación > 300
+    ) THEN
+        RAISE EXCEPTION 'El cliente con ID % no es apto para un contrato crediticio, calificación insuficiente', NEW.id_clientes;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION generar_contrato_crediticio(
+    p_id_cliente INT,
+    p_id_carta_caracteristicas INT,
+    p_cuota_inicial DECIMAL(10, 2)
+)
+RETURNS VOID AS $$
+DECLARE
+    v_id_concesionario INT;
+    v_precio_vehiculo DECIMAL(12, 2);
+    v_monto_a_desembolsar DECIMAL(15, 2);
+    v_numero_serie CHAR(8);
+    v_id_gestor_comercial INT;
+BEGIN
+    SELECT id_concesionario, número_de_serie_del_vehículo
+    INTO v_id_concesionario, v_numero_serie
+    FROM carta_características
+    WHERE id = p_id_carta_caracteristicas;
+
+    IF v_id_concesionario IS NULL THEN
+        RAISE EXCEPTION 'La carta de características con ID % no existe', p_id_carta_caracteristicas;
+    END IF;
+
+    SELECT precio
+    INTO v_precio_vehiculo
+    FROM vehículo
+    WHERE número_de_serie = v_numero_serie;
+
+    IF p_cuota_inicial > v_precio_vehiculo THEN
+        RAISE EXCEPTION 'La cuota inicial % no puede ser mayor al precio del vehículo %', p_cuota_inicial, v_precio_vehiculo;
+    END IF;
+
+    v_monto_a_desembolsar := v_precio_vehiculo - p_cuota_inicial;
+
+    SELECT id
+    INTO v_id_gestor_comercial
+    FROM gestor_comercial
+    ORDER BY RANDOM()
+    LIMIT 1;
+
+    INSERT INTO contrato_crediticio (
+        año,
+        mes,
+        día,
+        id_carta_caracteristicas,
+        id_gestor_comercial,
+        cuota_inicial,
+        monto_a_desembolsar,
+        id_clientes
+    )
+    VALUES (
+        TO_CHAR(CURRENT_DATE, 'YYYY'),
+        TO_CHAR(CURRENT_DATE, 'MM'),
+        TO_CHAR(CURRENT_DATE, 'DD'),
+        p_id_carta_caracteristicas,
+        v_id_gestor_comercial,
+        p_cuota_inicial,
+        v_monto_a_desembolsar,
+        p_id_cliente
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Triggers
+CREATE TRIGGER auto_assign_credit_score
+AFTER INSERT ON clientes
+FOR EACH ROW
+EXECUTE FUNCTION assign_random_credit_score();
+
+CREATE TRIGGER validate_before_credit_contract
+BEFORE INSERT ON contrato_crediticio
+FOR EACH ROW
+EXECUTE FUNCTION validate_client_eligibility();
+
+-- Alterar columna en la tabla clientes
+ALTER TABLE clientes RENAME COLUMN "teléfono" TO telefono;
+
+-- Alterar columna en la tabla gestor_comercial
+ALTER TABLE gestor_comercial RENAME COLUMN "teléfono" TO telefono;
+
+-- Alterar columna en la tabla área_de_riesgos
+ALTER TABLE área_de_riesgos RENAME COLUMN "teléfono" TO telefono;
+
+-- Alterar columna en la tabla concesionario
+ALTER TABLE concesionario RENAME COLUMN "teléfono" TO telefono;
